@@ -1,18 +1,18 @@
-name: Deploy to AWS ECS
+# name: Deploy to AWS ECS
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    env:
-      ECR_REPOSITORY: your-ecr-repository
-      ECS_SERVICE: your-ecs-service
-      ECS_CLUSTER: your-ecs-cluster
-      CONTAINER_NAME: your-container-name
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     env:
+#       ECR_REPOSITORY: your-ecr-repository
+#       ECS_SERVICE: your-ecs-service
+#       ECS_CLUSTER: your-ecs-cluster
+#       CONTAINER_NAME: your-container-name
 
     steps:
       # Step 1: Checkout code from GitHub repository
