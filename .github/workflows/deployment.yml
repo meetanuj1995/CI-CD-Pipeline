@@ -34,6 +34,9 @@ jobs:
       # Step 3: Log in to Amazon ECR
       - name: Log in to Amazon ECR
         id: login-ecr
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY }}
+          echo "ecr_uri=${{ secrets.ECR_REPOSITORY }}" >> $GITHUB_STATE
         uses: aws-actions/amazon-ecr-login@v1
         with:
           region: ${{ secrets.AWS_REGION }}
