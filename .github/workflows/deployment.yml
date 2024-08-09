@@ -1,1 +1,64 @@
+name: Deploy to AWS ECS
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+      ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+      ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+      # Step 1: Checkout code from GitHub repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Step 3: Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          region: ${{ secrets.AWS_REGION }}
+
+      # Step 4: Build and push Docker image to ECR
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ secrets.ECR_REPOSITORY }}:latest
+
+      # Step 5: Deploy to ECS
+      - name: Deploy to ECS
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ecs-task-def.json
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      # Step 6: Run integration tests
+      # - name: Run integration tests
+      #   run: |
+      #     curl -f http://my-app-endpoint/health || exit 1
+
+      # Step 7: Rollback on failure
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Integration tests failed. Rolling back..."
+          aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER }} --service ${{ secrets.ECS_SERVICE }} --force-new-deployment
